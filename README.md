@@ -3,7 +3,7 @@
 TECAN-reader based yeast growth measurements in R
 =================================================
 
-Maxi's [script](./TECAN_384_well.R) and some [toy data](./TECAN_growths.xlsx) for calculating maximum yeast growth rates from 384-well TECAN measurements, in R.
+Maxi's [script](./TECAN_384_well.R) and some [toy data](./TECAN_growths.xlsx) for calculating maximum yeast growth rates from 384-well TECAN measurements, in R. Additionally, [Aina's script](./recovery_data_script.R) can be used to recover run data from the system's output log files – the only access to raw data when the excel sheet is closed and not saved during the run (usually by another user...).
 
 ```
 R --version
