@@ -1,4 +1,4 @@
-## Example TECAN experiment
+## Example TECAN experiment analysis
 ## 02/06/2023
 ## maximilian.stammnitz@crg.eu
 
