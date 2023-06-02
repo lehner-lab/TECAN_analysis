@@ -1,3 +1,5 @@
+![yeast](./yeast.png)
+
 TECAN-reader based yeast growth measurements in R
 =================================================
 
