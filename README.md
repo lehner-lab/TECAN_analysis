@@ -1,7 +1,7 @@
 TECAN-reader based yeast growth measurements in R
 =================================================
 
-Maxi's script to calculate and plot yeast growth rates from 96-well or 384-well TECAN measurements, in R.
+Maxi's script and some toy data for calculating and plotting yeast growth rates from 96-well or 384-well TECAN measurements, in R.
 
 ```
 R --version
