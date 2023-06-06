@@ -1,4 +1,5 @@
-![yeast](./yeast.png)
+<img src="https://github.com/lehner-lab/TECAN_analysis/blob/main/yeast.png" width="500">
+
 
 TECAN-reader based yeast growth measurements in R
 =================================================
