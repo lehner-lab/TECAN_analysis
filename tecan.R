@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Example TECAN experiment analysis
+## TECAN experiment analysis
 ## 06/06/2023
 ## maximilian.stammnitz@crg.eu
 ## andre.faure@crg.eu
@@ -26,56 +26,56 @@ if(length(missing_packages)!=0){
 ### FUNCTIONS
 ###########################
 
-#Import TECAN plate design
-import_tecan_plate_design <- function(
-  input_path,
-  well_ids
-  ){
-  ## import 384-well plate design matrix from summary excel sheet
-  suppressMessages(suppressWarnings(design <- as.matrix(read_xlsx(input_path, sheet = 1))[2:18,1:25]))
-  colnames(design) <- design[1,]
-  design <- design[-1,]
-  rownames(design) <- design[,1]
-  design <- design[,-1]
-  design_dt <- data.table(
-    id = paste0(rep(rownames(design), each = dim(design)[2]), as.integer(colnames(design))),
-    name = as.character(t(design)))
+# #Import TECAN plate design - obsolete
+# import_tecan_plate_design <- function(
+#   input_path,
+#   well_ids
+#   ){
+#   ## import 384-well plate design matrix from summary excel sheet
+#   suppressMessages(suppressWarnings(design <- as.matrix(read_xlsx(input_path, sheet = 1))[2:18,1:25]))
+#   colnames(design) <- design[1,]
+#   design <- design[-1,]
+#   rownames(design) <- design[,1]
+#   design <- design[,-1]
+#   design_dt <- data.table(
+#     id = paste0(rep(rownames(design), each = dim(design)[2]), as.integer(colnames(design))),
+#     name = as.character(t(design)))
 
-  #Check design matches that of 384-well plate 
-  if(length(as.character(design))!=384 | nrow(design_dt)!=384){
-    stop("Excel file format invalid for 384-well plate.", call. = FALSE)
-  }
+#   #Check design matches that of 384-well plate 
+#   if(length(as.character(design))!=384 | nrow(design_dt)!=384){
+#     stop("Excel file format invalid for 384-well plate.", call. = FALSE)
+#   }
 
-  #Default well ids (all non-NA names)
-  if(length(well_ids)==1 & well_ids[1] == "all"){
-    well_ids <- design_dt[!is.na(name),id]
-  }
+#   #Default well ids (all non-NA names)
+#   if(length(well_ids)==1 & well_ids[1] == "all"){
+#     well_ids <- design_dt[!is.na(name),id]
+#   }
 
-  #Wells ids or names supplied?
-  well_names <- FALSE
-  if(sum(well_ids %in% design_dt[,name])>sum(well_ids %in% design_dt[,id])){
-    well_names <- TRUE
-  }
+#   #Wells ids or names supplied?
+#   well_names <- FALSE
+#   if(sum(well_ids %in% design_dt[,name])>sum(well_ids %in% design_dt[,id])){
+#     well_names <- TRUE
+#   }
 
-  #Check well ids are valid 
-  if(sum(well_ids %in% design_dt[,id])!=length(well_ids) & !well_names){
-    stop("Invalid well ids specified.", call. = FALSE)
-  }
+#   #Check well ids are valid 
+#   if(sum(well_ids %in% design_dt[,id])!=length(well_ids) & !well_names){
+#     stop("Invalid well ids specified.", call. = FALSE)
+#   }
 
-  #Check well names are valid 
-  if(sum(well_ids %in% design_dt[,name])!=length(well_ids) & well_names){
-    stop("Invalid well names specified.", call. = FALSE)
-  }
+#   #Check well names are valid 
+#   if(sum(well_ids %in% design_dt[,name])!=length(well_ids) & well_names){
+#     stop("Invalid well names specified.", call. = FALSE)
+#   }
 
-  #Translate well names to well ids
-  if(well_names){
-    well_ids <- design_dt[name %in% well_ids,id]
-  }
+#   #Translate well names to well ids
+#   if(well_names){
+#     well_ids <- design_dt[name %in% well_ids,id]
+#   }
 
-  return(list(
-    'design' = design_dt,
-    'well_ids' = well_ids))
-}
+#   return(list(
+#     'design' = design_dt,
+#     'well_ids' = well_ids))
+# }
 
 #Import TECAN plate data
 import_tecan_plate_data <- function(
@@ -84,9 +84,24 @@ import_tecan_plate_data <- function(
   ){
   ## import TECAN results (all wells) from summary excel sheet
   suppressMessages(suppressWarnings(tecan <- as.matrix(read_xlsx(excel_path, sheet = 1))))
-  tecan <- tecan[22:nrow(tecan),]
+  row1 <- grep("Cycle Nr.", tecan[,1])[1]+1
+  tecan <- tecan[row1:nrow(tecan),]
+  rowN <- which(is.na(tecan[,1]))[1]-1
+  if(!is.na(rowN)){
+    tecan <- tecan[1:rowN,]
+  }
   rownames(tecan) <- tecan[,1]
   tecan <- tecan[,-1]
+
+  #Default well ids (all non-NA names)
+  if(length(well_ids)==1 & well_ids[1] == "all"){
+    well_ids <- rownames(tecan)[!grepl("\\[", rownames(tecan))]
+  }
+
+  #Check well ids are valid 
+  if(sum(well_ids %in% rownames(tecan))!=length(well_ids)){
+    stop("Invalid well ids specified.", call. = FALSE)
+  }
 
   # tecan_select <- tecan_data[c('D2', 'G23', 'N18'),]
   tecan_select <- tecan[well_ids,]
@@ -99,7 +114,6 @@ import_tecan_plate_data <- function(
 #Calculate growth rate results using heuristic approach from growthrates package i.e. similar to the "growth rates made easy"-method of Hall et al. (2013)
 calculate_growth_rates_heuristic <- function(
   tecan_data,
-  plate_design,
   h_parameter
   ){
 
@@ -118,7 +132,6 @@ calculate_growth_rates_heuristic <- function(
     ### you can run plot(tmp) to check if the slope calculation looks good
     results_list[[well_ids[i]]] <- data.table(
       'well_id' = well_ids[i],
-      'well_name' = unlist(plate_design[id==well_ids[i],name]),
       'maxGR' = tmp@par[['mumax']],
       'lag' = tmp@par[['lag']])
   }
@@ -141,7 +154,7 @@ parser <- add_argument(parser, "excel_path", help = "Path to the Excel file")
 #Add Optional Argument for Integer
 parser <- add_argument(parser, "--method", default='heuristic', help = "Maximum growth rate method")
 parser <- add_argument(parser, "--parameter", type = "integer", default=15, help = "h-parameter; number of consecutive time points to evaluate maximum growth rate")
-parser <- add_argument(parser, "--wells", default='all', help = "Comma-separated list of well ids or well names")
+parser <- add_argument(parser, "--wells", default='all', help = "Comma-separated list of well ids")
 parser <- add_argument(parser, "--outputPath", help = "Output file path (default: no output file; print results to stdout)")
 
 #Parse the Command Line Arguments
@@ -180,16 +193,6 @@ wells <- unlist(strsplit(args[['wells']], ','))
 outputPath <- args[['outputPath']]
 
 ###########################
-### IMPORT PLATE DESIGN
-###########################
-
-tecan_design <- import_tecan_plate_design(
-  input_path = excel_path,
-  well_ids = wells)
-design_dt <- tecan_design[['design']]
-wells <- tecan_design[['well_ids']]
-
-###########################
 ### IMPORT PLATE DATA MATRIX
 ###########################
 
@@ -204,7 +207,6 @@ tecan_mat <- import_tecan_plate_data(
 if(method == "heuristic"){
   result_dt <- calculate_growth_rates_heuristic(
     tecan_data = tecan_mat,
-    plate_design = design_dt,
     h_parameter = hParameter)
 }
 
