@@ -60,5 +60,7 @@ Requires the following R packages (see [tecan.yaml](tecan.yaml)):
 * beeswarm
 * scales
 * data.table
+* ggplot2
+* reshape2
   
 Although care has been taken to make the code distribution-independent, it is possible that some of the scripts only work on Unix/MacOS systems, and may need to be modified in order to run on Windows systems.
