@@ -9,4 +9,6 @@ dependencies:
   - r-beeswarm
   - r-scales
   - r-argparser
+  - r-ggplot2
+  - r-reshape2
 

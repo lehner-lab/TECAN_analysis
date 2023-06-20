@@ -16,7 +16,9 @@ required_packages <- c(
   "growthrates",
   "beeswarm",
   "scales",
-  "data.table")
+  "data.table",
+  "ggplot2",
+  "reshape2")
 missing_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
 if(length(missing_packages)!=0){
   stop(paste0("Required R packages not installed. Please install the following packages: ", paste(missing_packages, sep = ", ")), call. = FALSE)
@@ -138,6 +140,64 @@ calculate_growth_rates_heuristic <- function(
   return(rbindlist(results_list))
 }
 
+#Set well status based on dead and lag thresholds
+set_well_status <- function(
+  input_dt,
+  dead_threshold,
+  lag_threshold
+  ){
+  input_dt[, status := 'PASS']
+  input_dt[maxGR<dead_threshold, status := paste0('FAIL (maxGR<', dead_threshold, ')')]
+  input_dt[lag>lag_threshold, status := paste0('FAIL (lag>', lag_threshold, ')')]
+  return(input_dt)
+}
+
+#ggplot2-like colour scale in HCL space.
+gg_color_hue <- function(
+  n
+  ){
+  hues = seq(15, 375, length = n + 1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+#Plot growth curves
+plot_growth_curves <- function(
+  tecan_data,
+  input_dt){
+  #Format plot data
+  plot_dt <- as.data.table(t(tecan_data))
+  plot_dt[, time := as.numeric(colnames(tecan_data))]
+  plot_dt <- reshape2::melt(plot_dt, id = c('time'))
+  plot_dt <- as.data.table(plot_dt)[!is.na(value)]
+  colnames(plot_dt)[2:3] <- c('well_id', 'OD')
+  #Well status
+  plot_dt <- merge(plot_dt, input_dt[,.(well_id, status)], by = 'well_id')
+  plot_dt[, status_id := paste0(status, ": ", well_id)]
+  plot_dt <- plot_dt[order(status_id, decreasing = T)]
+  status_id_levels <- plot_dt[!duplicated(status_id),status_id]
+  plot_dt[, status_id := factor(status_id, levels = status_id_levels)]
+  #Plot colours
+  plot_cols <- gg_color_hue(3)
+  plot_dt[,status_col := plot_cols[2]]
+  plot_dt[grep("maxGR", status), status_col := plot_cols[1]]
+  plot_dt[grep("lag", status), status_col := plot_cols[3]]
+  plot_dt[, status_col := factor(status_col, levels = c(plot_cols[2], plot_cols[1], plot_cols[3]))]
+  plot_cols <- plot_dt[,as.character(status_col)]
+  names(plot_cols) <- plot_dt[, status_id]
+  plot_dt[, status := factor(status, levels = unique(status))]
+  d <- ggplot2::ggplot(plot_dt,ggplot2::aes(time, OD, color = status_id)) +
+    ggplot2::geom_line(linewidth = 0.5) +
+    ggplot2::xlab("Time (h)") +
+    ggplot2::ylab("Optical density") +
+    ggplot2::facet_wrap(~status, ncol = 1) +
+    ggplot2::theme_bw()
+  if(input_dt[status!="PASS",.N]>20){
+    d <- d + ggplot2::scale_colour_manual(values = plot_cols, breaks = names(plot_cols)[!grepl("PASS", names(plot_cols))], guide="none")
+  }else{
+    d <- d + ggplot2::scale_colour_manual(values = plot_cols, breaks = names(plot_cols)[!grepl("PASS", names(plot_cols))])
+  }
+  ggplot2::ggsave(paste0(outputPrefix, '.pdf'), d, width = 8, height = 8, useDingbats=FALSE)
+}
 
 ###########################
 ### COMMAND-LINE OPTIONS
@@ -155,7 +215,9 @@ parser <- add_argument(parser, "excel_path", help = "Path to the Excel file")
 parser <- add_argument(parser, "--method", default='heuristic', help = "Maximum growth rate method")
 parser <- add_argument(parser, "--parameter", type = "integer", default=15, help = "h-parameter; number of consecutive time points to evaluate maximum growth rate")
 parser <- add_argument(parser, "--wells", default='all', help = "Comma-separated list of well ids")
-parser <- add_argument(parser, "--outputPath", help = "Output file path (default: no output file; print results to stdout)")
+parser <- add_argument(parser, "--deadThreshold", type = "double", default=0.05, help = "Growth rate threshold for dead variants")
+parser <- add_argument(parser, "--lagThreshold", type = "double", default=48.0, help = "Lag time threshold for problematic variants")
+parser <- add_argument(parser, "--outputPrefix", help = "Output path prefix (default: no output file; print results to stdout)")
 
 #Parse the Command Line Arguments
 args <- parse_args(parser)
@@ -180,6 +242,8 @@ suppressMessages(suppressWarnings(library(growthrates)))
 suppressMessages(suppressWarnings(library(beeswarm)))
 suppressMessages(suppressWarnings(library(scales)))
 suppressMessages(suppressWarnings(library(data.table)))
+suppressMessages(suppressWarnings(library(ggplot2)))
+suppressMessages(suppressWarnings(library(reshape2)))
 
 ###########################
 ### GLOBALS
@@ -190,7 +254,9 @@ excel_path <- args[['excel_path']]
 method <- args[['method']]
 hParameter <- args[['parameter']]
 wells <- unlist(strsplit(args[['wells']], ','))
-outputPath <- args[['outputPath']]
+dead_threshold <- args[['deadThreshold']]
+lag_threshold <- args[['lagThreshold']]
+outputPrefix <- args[['outputPrefix']]
 
 ###########################
 ### IMPORT PLATE DATA MATRIX
@@ -211,14 +277,31 @@ if(method == "heuristic"){
 }
 
 ###########################
+### SET WELL STATUS
+###########################
+
+result_dt <- set_well_status(
+    input_dt = result_dt,
+    dead_threshold = dead_threshold,
+    lag_threshold = lag_threshold)
+
+###########################
+### PLOT GROWTH CURVES
+###########################
+
+plot_growth_curves(
+  tecan_data = tecan_mat,
+  input_dt = result_dt)
+
+###########################
 ### PRINT OR SAVE RESULTS
 ###########################
 
 #Print or save
-if(is.na(outputPath)){
+if(is.na(outputPrefix)){
   print(result_dt)
 }else{
-  write.table(result_dt, file = outputPath, sep = "\t", quote = F, row.names = F)
+  write.table(result_dt, file = paste0(outputPrefix, '.txt'), sep = "\t", quote = F, row.names = F)
 }
 
 
