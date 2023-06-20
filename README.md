@@ -42,13 +42,13 @@ We recommend using [this yaml file](tecan.yaml) to create a dedicated Conda envi
 # Usage
    ```
    $ conda activate tecan
-   $ TECAN_analysis/TECAN_384_well.R -h
+   $ TECAN_analysis/tecan.R -h
    ```
    
 # Demo
    ```
    $ conda activate tecan
-   $ TECAN_analysis/TECAN_384_well.R TECAN_analysis/TECAN_growths.xlsx
+   $ TECAN_analysis/tecan.R TECAN_analysis/TECAN_growths.xlsx
    ```
 
 # Dependencies
