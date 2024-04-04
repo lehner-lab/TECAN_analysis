@@ -178,9 +178,14 @@ set_well_status <- function(
   design_dt <- design_dt[,.SD,,.SDcols = names(design_dt)[names(design_dt) %in% c("Well", "Plasmid", "Well class")]]
 
   #Merge results with design
+  well_ids_sorted <- input_dt[,well_id]
   names(design_dt)[names(design_dt)=='Well'] <- 'well_id'
   names(design_dt) <- gsub(" ", "_", names(design_dt))
   input_dt <- merge(input_dt, design_dt[], by = 'well_id', all.x = T)
+
+  #Sort by well ids
+  input_dt <- input_dt[, well_id_factor := factor(well_id, levels = well_ids_sorted)][order(well_id_factor)]
+  input_dt <- input_dt[,.SD,,.SDcols = names(input_dt)[names(input_dt)!="well_id_factor"]]
 
   return(input_dt)
 }
