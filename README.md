@@ -43,6 +43,46 @@ We recommend using [this yaml file](tecan.yaml) to create a dedicated Conda envi
    ```
    $ conda activate tecan
    $ TECAN_analysis/tecan.R -h
+   usage: tecan.R [--] [--help] [--opts OPTS] [--method METHOD]
+          [--parameter PARAMETER] [--wells WELLS] [--deadThreshold
+          DEADTHRESHOLD] [--lagThreshold LAGTHRESHOLD] [--outputPrefix
+          OUTPUTPREFIX] [--designPath DESIGNPATH] [--plotWidth PLOTWIDTH]
+          [--plotHeight PLOTHEIGHT] [--ODThreshold ODTHRESHOLD] excel_path
+   
+   TECAN-reader based yeast growth measurements and summary plots
+   
+   positional arguments:
+     excel_path           Path to the Excel file
+   
+   flags:
+     -h, --help           show this help message and exit
+   
+   optional arguments:
+     -x, --opts           RDS file containing argument values
+     -m, --method         Maximum growth rate method [default: heuristic]
+     -p, --parameter      h-parameter; number of consecutive time points
+                          to evaluate maximum growth rate [default: 15]
+     -w, --wells          Comma-separated list of well ids [default: all]
+     -d, --deadThreshold  Growth rate threshold for dead variants
+                          [default: 0.05]
+     -l, --lagThreshold   Lag time threshold (in hours) for problematic
+                          variants [default: 48]
+     -o, --outputPrefix   Output path prefix [default: no output file;
+                          print results to stdout]
+     --designPath         Path to the plain text file with 'Well',
+                          'Plasmid' and 'Well class' columns [optional].
+                          'Well' column is required whereas 'Plasmid' and
+                          'Well class' columns are optional; valid 'Well
+                          class' column values are: 'Sample', 'Positive
+                          control', 'Negative control', 'Blank' and
+                          'Discarded'; plasmid-specific growth curves are
+                          produced if 'Plasmid' column is supplied;
+                          plasmid-specific boxplots are produced if
+                          'Plasmid' and 'Well class' columns are supplied.
+     --plotWidth          Plot width in inches [default: 8]
+     --plotHeight         Plot height in inches [default: 8]
+     -O, --ODThreshold    Minimum optical density required to escape
+                          'deadThreshold' [default: 0]
    ```
    
 # Demo
