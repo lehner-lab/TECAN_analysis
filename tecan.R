@@ -310,7 +310,7 @@ plot_growth_boxplots <- function(
 library(argparser)
 
 #Create Argument Parser
-parser <- arg_parser(description = "Your tool description")
+parser <- arg_parser(description = "TECAN-reader based yeast growth measurements and summary plots")
 
 #Add Positional Argument for File Path
 parser <- add_argument(parser, "excel_path", help = "Path to the Excel file")
@@ -320,12 +320,12 @@ parser <- add_argument(parser, "--method", default = 'heuristic', help = "Maximu
 parser <- add_argument(parser, "--parameter", type = "integer", default = 15, help = "h-parameter; number of consecutive time points to evaluate maximum growth rate")
 parser <- add_argument(parser, "--wells", default = 'all', help = "Comma-separated list of well ids")
 parser <- add_argument(parser, "--deadThreshold", type = "double", default = 0.05, help = "Growth rate threshold for dead variants")
-parser <- add_argument(parser, "--lagThreshold", type = "double", default = 48.0, help = "Lag time threshold for problematic variants")
-parser <- add_argument(parser, "--outputPrefix", help = "Output path prefix (default: no output file; print results to stdout)")
-parser <- add_argument(parser, "--designPath", default = NA, help = "Path to the plain text file with 'Well', 'Plasmid' and 'Well class' columns (optional). 'Well' column is required whereas 'Plasmid' and 'Well class' columns are optional; plasmid-specific growth curves are produced if 'Plasmid' column is supplied; plasmid-specific boxplots are produced if 'Plasmid' and 'Well class' columns are supplied.")
-parser <- add_argument(parser, "--plotWidth", type = "integer", default = 8, help = "Plot width in inches (default:8)")
-parser <- add_argument(parser, "--plotHeight", type = "integer", default = 8, help = "Plot height in inches (default:8)")
-parser <- add_argument(parser, "--ODThreshold", type = "double", default = 0, help = "Minimum optical density required to escape 'deadThreshold' (default:0)")
+parser <- add_argument(parser, "--lagThreshold", type = "double", default = 48.0, help = "Lag time threshold (in hours) for problematic variants")
+parser <- add_argument(parser, "--outputPrefix", help = "Output path prefix [default: no output file; print results to stdout]")
+parser <- add_argument(parser, "--designPath", default = NA, help = "Path to the plain text file with 'Well', 'Plasmid' and 'Well class' columns [optional]. 'Well' column is required whereas 'Plasmid' and 'Well class' columns are optional; valid 'Well class' column values are: 'Sample', 'Positive control', 'Negative control', 'Blank' and 'Discarded'; plasmid-specific growth curves are produced if 'Plasmid' column is supplied; plasmid-specific boxplots are produced if 'Plasmid' and 'Well class' columns are supplied.")
+parser <- add_argument(parser, "--plotWidth", type = "integer", default = 8, help = "Plot width in inches")
+parser <- add_argument(parser, "--plotHeight", type = "integer", default = 8, help = "Plot height in inches")
+parser <- add_argument(parser, "--ODThreshold", type = "double", default = 0, help = "Minimum optical density required to escape 'deadThreshold'")
 
 #Parse the Command Line Arguments
 args <- parse_args(parser)
