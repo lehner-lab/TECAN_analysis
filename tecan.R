@@ -153,9 +153,7 @@ set_well_status <- function(
   input_dt[lag>lag_threshold, status := paste0('FAIL (lag>', lag_threshold, ')')]
 
   #Check if design path exists
-  if(is.null(design_path)){
-    return(input_dt)
-  }else if(!file.exists(design_path)){
+  if(is.na(design_path)){
     return(input_dt)
   }
 
@@ -317,7 +315,7 @@ parser <- add_argument(parser, "--wells", default = 'all', help = "Comma-separat
 parser <- add_argument(parser, "--deadThreshold", type = "double", default = 0.05, help = "Growth rate threshold for dead variants")
 parser <- add_argument(parser, "--lagThreshold", type = "double", default = 48.0, help = "Lag time threshold for problematic variants")
 parser <- add_argument(parser, "--outputPrefix", help = "Output path prefix (default: no output file; print results to stdout)")
-parser <- add_argument(parser, "--designPath", default = NULL, help = "Path to the plain text file with Well, Plasmid and Well class columns (optional)")
+parser <- add_argument(parser, "--designPath", default = NA, help = "Path to the plain text file with Well, Plasmid and Well class columns (optional)")
 parser <- add_argument(parser, "--plotWidth", type = "integer", default = 8, help = "Plot width in inches (default:8)")
 parser <- add_argument(parser, "--plotHeight", type = "integer", default = 8, help = "Plot height in inches (default:8)")
 parser <- add_argument(parser, "--ODThreshold", type = "double", default = 0, help = "Minimum optical density required to escape 'deadThreshold' (default:0)")
@@ -329,12 +327,20 @@ args <- parse_args(parser)
 ### INPUT VALIDATION
 ###########################
 
-#Check if Excel file path is provided
+#Check if Excel file path is provided and exists
 if(is.null(args[['excel_path']])){
   stop("Excel file path is required.", call. = FALSE)
 }else if(!file.exists(args[["excel_path"]])){
   stop("Excel file path does not exist", call. = FALSE)
 }
+
+#Check if Design file path exists if provided
+if(!is.na(args[['designPath']])){
+  if(!file.exists(args[['designPath']])){
+    stop("Design file path does not exist", call. = FALSE)
+  }
+}
+
 
 ###########################
 ### DEPENDENCIES
