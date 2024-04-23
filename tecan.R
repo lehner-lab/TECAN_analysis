@@ -161,19 +161,26 @@ set_well_status <- function(
   design_dt <- fread(design_path)
   #Check if Well column exists
   if(!"Well" %in% names(design_dt)){
-    stop("Well column missing in plate design file ('--designPath').", call. = FALSE)
+    stop("'Well' column missing in plate design file ('--designPath').", call. = FALSE)
   }
   #Check all well_ids exist in Well column
   if(sum(!input_dt[,well_id] %in% design_dt[,Well])!=0){
-    stop("One of more wells missing in plate design file ('--designPath').", call. = FALSE)
+    stop("One of more 'Wells' missing in plate design file ('--designPath').", call. = FALSE)
   }
   #Check if Plasmid column exists
   if(!"Plasmid" %in% names(design_dt)){
-    print("Warning: Plasmid column missing in plate design file ('--designPath'). Plasmid-specific growth curves and boxplots will not be produced.", call. = FALSE)
+    print("Warning: 'Plasmid' column missing in plate design file ('--designPath'). Plasmid-specific growth curves and boxplots will not be produced.", call. = FALSE)
   }else if(!"Well class" %in% names(design_dt)){
     print("Warning: 'Well class' column missing in plate design file ('--designPath'). Plasmid-specific boxplots will not be produced.", call. = FALSE)
   }
   design_dt <- design_dt[,.SD,,.SDcols = names(design_dt)[names(design_dt) %in% c("Well", "Plasmid", "Well class")]]
+  #Check if Well classes consistent
+  if("Plasmid" %in% names(design_dt) & "Well class" %in% names(design_dt)){
+    design_dt_uniq <- unique(design_dt[,.SD,,.SDcols = c("Plasmid", "Well class")])[,Plasmid]
+    if(sum(duplicated(unique(design_dt[,.SD,,.SDcols = c("Plasmid", "Well class")])[,Plasmid]))!=0){
+      stop("Inconsistent 'Well class' fields in plate design file. Replicate 'Plasmid' wells should have the same 'Well class' assignment.", call. = FALSE)
+    }
+  }
 
   #Merge results with design
   well_ids_sorted <- input_dt[,well_id]
@@ -315,7 +322,7 @@ parser <- add_argument(parser, "--wells", default = 'all', help = "Comma-separat
 parser <- add_argument(parser, "--deadThreshold", type = "double", default = 0.05, help = "Growth rate threshold for dead variants")
 parser <- add_argument(parser, "--lagThreshold", type = "double", default = 48.0, help = "Lag time threshold for problematic variants")
 parser <- add_argument(parser, "--outputPrefix", help = "Output path prefix (default: no output file; print results to stdout)")
-parser <- add_argument(parser, "--designPath", default = NA, help = "Path to the plain text file with Well, Plasmid and Well class columns (optional)")
+parser <- add_argument(parser, "--designPath", default = NA, help = "Path to the plain text file with 'Well', 'Plasmid' and 'Well class' columns (optional). 'Well' column is required whereas 'Plasmid' and 'Well class' columns are optional; plasmid-specific growth curves are produced if 'Plasmid' column is supplied; plasmid-specific boxplots are produced if 'Plasmid' and 'Well class' columns are supplied.")
 parser <- add_argument(parser, "--plotWidth", type = "integer", default = 8, help = "Plot width in inches (default:8)")
 parser <- add_argument(parser, "--plotHeight", type = "integer", default = 8, help = "Plot height in inches (default:8)")
 parser <- add_argument(parser, "--ODThreshold", type = "double", default = 0, help = "Minimum optical density required to escape 'deadThreshold' (default:0)")
