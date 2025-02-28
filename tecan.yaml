@@ -2,7 +2,6 @@ name: tecan
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - r-data.table
   - r-readxl
