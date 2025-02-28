@@ -12,16 +12,16 @@ We recommend using [this yaml file](tecan.yaml) to create a dedicated Conda envi
 
    On MacOS, run:
    ```
-   $ curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
-   $ sh Miniconda3-latest-MacOSX-x86_64.sh
+   curl -L -O https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-x86_64.sh
+   sh Miniforge3-MacOSX-x86_64.sh
    ```
    On Linux, run:
    ```
-   $ curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-   $ sh Miniconda3-latest-Linux-x86_64.sh
+   curl -L -O https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+   sh Miniforge3-Linux-x86_64.sh
    ```
-
-   **IMPORTANT:** If in doubt, respond with "yes" to the following question during installation: "Do you wish the installer to initialize Miniconda3 by running conda init?". In this case Conda will modify your shell scripts (*~/.bashrc* or *~/.bash_profile*) to initialize Miniconda3 on startup. Ensure that any future modifications to your *$PATH* variable in your shell scripts occur **before** this code to initialize Miniconda3.
+   
+   **IMPORTANT:** If in doubt, respond with "yes" to the following question during installation: "Do you wish the installer to initialize Miniforge3 by running conda init?". In this case Conda will modify your shell scripts (*~/.bashrc* or *~/.bash_profile*) to initialize Miniforge3 on startup. Ensure that any future modifications to your *$PATH* variable in your shell scripts occur **before** this code to initialize Miniforge3.
 
 2. Clone the TECAN_analysis GitHub repository:
    ```
